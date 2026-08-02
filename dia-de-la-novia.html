@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Feliz día de la novia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* =====================================================================
+     PALETA — atardecer galáctico rosa-dorado
+     rosa       #ff5c8a
+     coral      #ff9e6d
+     oro        #ffd27d
+     magenta    #c74bd6
+     plum-noche #1a0322 -> #05010a (fondo)
+     ===================================================================== */
+  :root{
+    --rosa:   #ff5c8a;
+    --coral:  #ff9e6d;
+    --oro:    #ffd27d;
+    --magenta:#c74bd6;
+    --cream:  #ffe9f2;
+  }
+
+  html, body{
+    margin:0; height:100%; background:#05010a; overflow:hidden;
+    font-family:'Cormorant Garamond', serif; touch-action:none; color:var(--cream);
+  }
+  canvas{ display:block; }
+
+  /* ---------- Pantalla de inicio ---------- */
+  #inicio{
+    position:fixed; inset:0; z-index:3000;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at center, #3a0a2a 0%, #150217 55%, #05010a 100%);
+    cursor:pointer; transition:opacity 1.1s ease;
+    text-align:center; padding:24px;
+  }
+  #inicio.oculto{ opacity:0; pointer-events:none; }
+  #inicio .eyebrow{
+    font-family:'Jost', sans-serif; font-weight:300; letter-spacing:.42em;
+    text-transform:uppercase; font-size:.72rem; color:var(--oro); opacity:.85; margin-bottom:20px;
+  }
+  #inicio h1{
+    margin:0; font-weight:500; font-size:clamp(2.2rem, 8vw, 4.4rem); line-height:1.05;
+    background:linear-gradient(100deg, var(--oro), var(--rosa), var(--magenta));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 26px rgba(255,92,138,.35));
+  }
+  #inicio .toca{
+    margin-top:28px; font-family:'Jost', sans-serif; font-weight:300; font-size:.95rem;
+    letter-spacing:.14em; color:var(--cream); opacity:.9;
+    animation:latir 1.8s ease-in-out infinite;
+  }
+  #inicio .corazon{ margin-top:14px; font-size:2.4rem; animation:latir 1.2s ease-in-out infinite; }
+  @keyframes latir{ 0%,100%{ transform:scale(1); opacity:.85 } 50%{ transform:scale(1.12); opacity:1 } }
+
+  /* ---------- Título superior ---------- */
+  #titulo{
+    position:fixed; top:26px; left:0; width:100%; text-align:center; z-index:1500;
+    pointer-events:none; font-weight:600; letter-spacing:.02em;
+    font-size:clamp(1.4rem, 4.5vw, 2.7rem);
+    background:linear-gradient(100deg, var(--oro), var(--rosa), var(--magenta));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 16px rgba(255,92,138,.45));
+    opacity:0; transition:opacity 1.4s ease .3s;
+  }
+  #titulo.visible{ opacity:1; }
+  #subtitulo{
+    position:fixed; top:calc(26px + clamp(1.4rem,4.5vw,2.7rem) + 6px); left:0; width:100%;
+    text-align:center; z-index:1500; pointer-events:none;
+    font-family:'Jost', sans-serif; font-weight:300; letter-spacing:.34em; text-transform:uppercase;
+    font-size:.66rem; color:var(--oro); opacity:0; transition:opacity 1.4s ease .5s;
+  }
+  #subtitulo.visible{ opacity:.8; }
+
+  /* ---------- Pista de navegación ---------- */
+  #pista{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:1400;
+    font-family:'Jost', sans-serif; font-weight:300; font-size:.72rem; letter-spacing:.14em;
+    color:var(--cream); opacity:0; transition:opacity 1s ease; text-align:center; pointer-events:none;
+    text-shadow:0 0 10px rgba(0,0,0,.6);
+  }
+  #pista.visible{ opacity:.55; }
+
+  /* ---------- Botones flotantes ---------- */
+  .fab{
+    position:fixed; z-index:1800; width:56px; height:56px; border-radius:50%; border:none;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.4rem;
+    color:#fff; transition:transform .25s ease, opacity 1s ease; opacity:0; pointer-events:none;
+  }
+  .fab.visible{ opacity:1; pointer-events:auto; }
+  .fab:hover{ transform:scale(1.09); }
+  .fab:focus-visible{ outline:2px solid var(--oro); outline-offset:3px; }
+  #btn-carta{
+    bottom:24px; right:24px;
+    background:linear-gradient(135deg, var(--rosa), var(--coral));
+    box-shadow:0 0 20px rgba(255,92,138,.6), 0 6px 16px rgba(0,0,0,.35);
+    animation:latir 2s ease-in-out infinite;
+  }
+
+  /* ---------- Carta ---------- */
+  #carta-overlay{
+    position:fixed; inset:0; z-index:2500; display:flex; align-items:center; justify-content:center;
+    background:rgba(10,2,12,.82); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px);
+    opacity:0; pointer-events:none; transition:opacity .4s ease; padding:24px; box-sizing:border-box;
+  }
+  #carta-overlay.visible{ opacity:1; pointer-events:auto; }
+  #carta{
+    position:relative; max-width:600px; width:100%; max-height:84vh; overflow-y:auto;
+    padding:44px 36px;
+    background:linear-gradient(165deg, rgba(58,10,42,.97), rgba(15,2,20,.98));
+    border:1px solid rgba(255,210,125,.28); border-radius:20px;
+    box-shadow:0 0 48px rgba(255,92,138,.3);
+    transform:translateY(20px) scale(.96); transition:transform .45s ease;
+  }
+  #carta-overlay.visible #carta{ transform:translateY(0) scale(1); }
+  #carta .sello{
+    font-family:'Jost', sans-serif; font-weight:300; letter-spacing:.34em; text-transform:uppercase;
+    font-size:.62rem; color:var(--oro); text-align:center; opacity:.85; margin-bottom:6px;
+  }
+  #carta h2{
+    text-align:center; margin:0 0 26px; font-weight:600; font-size:1.7rem;
+    background:linear-gradient(100deg, var(--oro), var(--rosa)); -webkit-background-clip:text;
+    background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  #carta .saludo{ font-style:italic; text-align:center; margin:0 0 18px; opacity:.92; font-size:1.15rem; }
+  #carta p{ line-height:1.8; font-size:1.12rem; margin:0 0 16px; }
+  #carta .firma{ text-align:center; font-style:italic; margin-top:22px; opacity:.9; font-size:1.15rem; }
+  #carta .de{
+    text-align:center; margin:4px 0 0; font-weight:600; font-size:1.5rem; letter-spacing:.01em;
+    background:linear-gradient(100deg, var(--oro), var(--rosa)); -webkit-background-clip:text;
+    background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  #cerrar-carta{
+    position:absolute; top:12px; right:14px; background:none; border:none; color:var(--cream);
+    font-size:1.4rem; cursor:pointer; line-height:1; padding:6px; opacity:.7; transition:opacity .2s;
+    font-family:'Jost', sans-serif;
+  }
+  #cerrar-carta:hover{ opacity:1; }
+  #cerrar-carta:focus-visible{ outline:2px solid var(--oro); outline-offset:2px; }
+
+  @media (max-width:480px){
+    .fab{ width:50px; height:50px; }
+    #carta{ padding:34px 24px; border-radius:16px; }
+    #carta h2{ font-size:1.4rem; }
+    #carta p, #carta .saludo, #carta .firma{ font-size:1rem; }
+    #carta .de{ font-size:1.25rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    #inicio .toca, #inicio .corazon, #btn-carta{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Pantalla de inicio -->
+  <div id="inicio">
+    <div class="eyebrow" id="inicio-eyebrow">1 de agosto</div>
+    <h1 id="inicio-titulo">Feliz día de la novia</h1>
+    <div class="toca">Toca para comenzar</div>
+    <div class="corazon" aria-hidden="true">❤️</div>
+  </div>
+
+  <!-- Título -->
+  <div id="titulo"></div>
+  <div id="subtitulo"></div>
+  <div id="pista">Arrastra para girar · pellizca o rueda para acercar</div>
+
+  <!-- Botones -->
+  <button id="btn-carta" class="fab" aria-label="Leer la carta">✉</button>
+
+  <!-- Carta -->
+  <div id="carta-overlay">
+    <div id="carta" role="dialog" aria-modal="true" aria-labelledby="carta-titulo">
+      <button id="cerrar-carta" aria-label="Cerrar la carta">✕</button>
+      <div class="sello" id="carta-sello">Para ti</div>
+      <h2 id="carta-titulo"></h2>
+      <p class="saludo" id="carta-saludo"></p>
+      <div id="carta-cuerpo"></div>
+      <p class="firma" id="carta-firma"></p>
+      <p class="de" id="carta-de"></p>
+    </div>
+  </div>
+
+  <canvas id="lienzo"></canvas>
+  <audio id="audio" loop></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+  <script>
+  /* =====================================================================
+     ╔══════════════════════════════════════════════════════════════════╗
+     ║  CONFIGURACIÓN  —  edita SOLO este bloque para personalizarlo      ║
+     ╚══════════════════════════════════════════════════════════════════╝
+     ===================================================================== */
+  const CONFIG = {
+    // Nombre o apodo de la novia (aparece en el subtítulo y la carta)
+    nombreNovia: "Loamy Gutiérrez",
+
+    // Título grande de arriba
+    tituloArriba: "Feliz día de la novia",
+    fecha: "1 de agosto",
+
+    // Frases que giran alrededor del corazón. Añade o quita las que quieras.
+    frases: [
+      "Feliz día de la novia",
+      "Eres mi lugar favorito",
+      "Mi persona, mi universo",
+      "Gracias por ser mía",
+      "Contigo hacia siempre",
+      "Mi corazón es tuyo",
+      "La más hermosa de todas",
+      "Cada día te elijo a ti"
+    ],
+
+    // La carta que se abre con el botón ✉
+    carta: {
+      sello: "Para Loamy Gutiérrez",
+      titulo: "Para ti, en tu día",
+      saludo: "Loamy, mi amor,",
+      parrafos: [
+        "Hay personas que pasan por la vida sin dejar rastro, pero tú llegaste de otra forma. Poco a poco te volviste imprescindible: no solo por los momentos bonitos, sino porque, casi sin darte cuenta, hiciste que muchos de mis días fueran mejores.",
+        "No sé qué nos depare el futuro, pero sí sé que quiero seguir a tu lado construyendo recuerdos, celebrando tus logros y abrazándote cuando todo pese demasiado. Eres muy importante para mí, y quiero que nunca olvides cuánto vales.",
+        "Te admiro por quien eres: con tus virtudes, tus defectos y tus días buenos y no tan buenos. Precisamente eso hace que el amor tenga sentido: elegir quedarse. Gracias por cada momento que me has regalado y por dejarme ser parte de tu vida."
+      ],
+      firma: "Con todo mi cariño,",
+      de: "Joel Reyes"          // quién firma / hace el detalle
+    },
+
+    // FOTOS FLOTANTES (opcional). Pega aquí URLs de imágenes (jpg/png/webp).
+    // Si lo dejas vacío [], la galaxia funciona igual, solo con frases.
+    // Ejemplo: fotos: ["https://.../foto1.jpg", "https://.../foto2.jpg"]
+    fotos: [],
+
+    // MÚSICA. Pon el nombre de tu archivo (o una URL). El archivo debe estar
+    // en la MISMA carpeta que este HTML y llamarse EXACTAMENTE así.
+    // Deja "" si no quieres música.
+    musicaUrl: "musica.mp3",
+    // ¿Quieres repetir en bucle solo un FRAGMENTO de una canción larga?
+    // Pon los segundos de inicio y fin. Deja null para repetir la pista completa.
+    musicaInicio: null,   // ej: 30   (empieza en el segundo 30)
+    musicaFin: null,      // ej: 75   (al llegar al 75 vuelve al inicio)
+
+    // COLORES de la galaxia (hex). Cámbialos si quieres otra vibra.
+    colores: {
+      corazon:  "#ff5c8a",  // rosa del corazón
+      espiral:  "#ff9e6d",  // coral de la espiral
+      polvo:    "#ffd27d",  // oro del polvo
+      estrella: "#ffe9f2",  // crema de las estrellas
+      glow1:    "255,92,138",   // (rgb) núcleo del brillo central
+      glow2:    "199,75,214"    // (rgb) halo del brillo central
+    }
+  };
+  /* ===================== FIN DE LA CONFIGURACIÓN ======================= */
+
+
+  // ===================== Rellenar textos ===============================
+  document.getElementById('inicio-eyebrow').textContent = CONFIG.fecha;
+  document.getElementById('inicio-titulo').textContent  = CONFIG.tituloArriba;
+  document.getElementById('titulo').textContent   = CONFIG.tituloArriba;
+  document.getElementById('subtitulo').textContent = "Para " + CONFIG.nombreNovia;
+  document.getElementById('carta-sello').textContent  = CONFIG.carta.sello;
+  document.getElementById('carta-titulo').textContent = CONFIG.carta.titulo;
+  document.getElementById('carta-saludo').textContent = CONFIG.carta.saludo;
+  document.getElementById('carta-firma').textContent  = CONFIG.carta.firma;
+  document.getElementById('carta-de').textContent     = CONFIG.carta.de || "";
+  const cuerpo = document.getElementById('carta-cuerpo');
+  CONFIG.carta.parrafos.forEach(txt => {
+    const p = document.createElement('p'); p.textContent = txt; cuerpo.appendChild(p);
+  });
+
+  const isMobile = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || window.innerWidth <= 820;
+
+  // ===================== Pantalla de inicio + audio ====================
+  const inicio = document.getElementById('inicio');
+  const audio = document.getElementById('audio');
+
+  if (CONFIG.musicaUrl){
+    audio.src = CONFIG.musicaUrl; audio.preload = 'auto';
+    // Si se indicaron inicio y fin, repetimos solo ese fragmento en bucle.
+    if (CONFIG.musicaInicio != null && CONFIG.musicaFin != null){
+      audio.removeAttribute('loop'); // el bucle lo controlamos manualmente
+      const alFragmento = ()=>{
+        if (audio.currentTime >= CONFIG.musicaFin || audio.currentTime < CONFIG.musicaInicio)
+          audio.currentTime = CONFIG.musicaInicio;
+      };
+      audio.addEventListener('timeupdate', alFragmento);
+      audio.addEventListener('play', alFragmento);
+    }
+    // Si no hay fragmento, el atributo loop del <audio> repite la pista completa.
+  }
+
+  let iniciado = false;
+  function comenzar(){
+    if (iniciado) return; iniciado = true;
+    if (CONFIG.musicaUrl){
+      const p = audio.play();
+      if (p && p.catch) p.catch(()=>{});
+    }
+    inicio.classList.add('oculto');
+    document.getElementById('titulo').classList.add('visible');
+    document.getElementById('subtitulo').classList.add('visible');
+    document.getElementById('pista').classList.add('visible');
+    document.getElementById('btn-carta').classList.add('visible');
+    // La pista de navegación desaparece sola tras unos segundos
+    setTimeout(()=> document.getElementById('pista').classList.remove('visible'), 6000);
+  }
+  inicio.addEventListener('click', comenzar);
+  inicio.addEventListener('touchend', e => { e.preventDefault(); comenzar(); }, {passive:false});
+
+  // ===================== Carta ========================================
+  const cartaOverlay = document.getElementById('carta-overlay');
+  document.getElementById('btn-carta').addEventListener('click', ()=> cartaOverlay.classList.add('visible'));
+  document.getElementById('cerrar-carta').addEventListener('click', ()=> cartaOverlay.classList.remove('visible'));
+  cartaOverlay.addEventListener('click', e => { if (e.target === cartaOverlay) cartaOverlay.classList.remove('visible'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cartaOverlay.classList.remove('visible'); });
+
+  // ===================== Escena Three.js ==============================
+  const canvas = document.getElementById('lienzo');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:!isMobile });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isMobile?1.5:2));
+  renderer.setSize(innerWidth, innerHeight);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 5000);
+
+  const cCorazon  = new THREE.Color(CONFIG.colores.corazon);
+  const cEspiral  = new THREE.Color(CONFIG.colores.espiral);
+  const cPolvo    = new THREE.Color(CONFIG.colores.polvo);
+  const cEstrella = new THREE.Color(CONFIG.colores.estrella);
+
+  // Cámara esférica con lerp e inercia
+  let targetDist = 400, currentDist = 400;
+  let rotX = 0.18, rotY = 0;
+  let targetRotX = 0.18, targetRotY = 0;
+
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin('anonymous');
+
+  // --- Textura circular suave para los puntos ---
+  function texturaPunto(){
+    const s=64, c=document.createElement('canvas'); c.width=c.height=s;
+    const g=c.getContext('2d');
+    const grad=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+    grad.addColorStop(0,'rgba(255,255,255,1)');
+    grad.addColorStop(.55,'rgba(255,255,255,1)');
+    grad.addColorStop(.85,'rgba(255,255,255,.55)');
+    grad.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=grad; g.fillRect(0,0,s,s);
+    return new THREE.CanvasTexture(c);
+  }
+  const puntoTex = texturaPunto();
+
+  // --- Estrellas de fondo ---
+  (function estrellas(count = isMobile?1500:2400, spread=3000){
+    const g=new THREE.BufferGeometry();
+    const pos=new Float32Array(count*3);
+    for(let i=0;i<count;i++){
+      const r=spread*(0.3+Math.random()*0.7);
+      const th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+      pos[i*3]  =r*Math.sin(ph)*Math.cos(th);
+      pos[i*3+1]=r*Math.cos(ph);
+      pos[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+    }
+    g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    scene.add(new THREE.Points(g, new THREE.PointsMaterial({
+      size:2.2, sizeAttenuation:false, map:puntoTex, transparent:true,
+      alphaTest:0.01, depthWrite:false, opacity:0.9, color:cEstrella
+    })));
+  })();
+
+  // --- Corazón de partículas ---
+  function curvaCorazon(t){
+    return {
+      x: 16*Math.pow(Math.sin(t),3),
+      y: 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t)
+    };
+  }
+  const ESCALA=3.2, GROSOR=3.4, PROF=8.5, OFFSET_Y=6;
+  const ptsCorazon=[]; const N_COR=isMobile?4600:6000;
+  for(let i=0;i<N_COR;i++){
+    const t=Math.random()*Math.PI*2;
+    const p0=curvaCorazon(t), p1=curvaCorazon(t+0.001);
+    const tx=p1.x-p0.x, ty=p1.y-p0.y, len=Math.hypot(tx,ty)||1;
+    const nx=-ty/len, ny=tx/len, off=(Math.random()-0.5)*GROSOR;
+    ptsCorazon.push(new THREE.Vector3(
+      (p0.x+nx*off)*ESCALA,
+      (p0.y+ny*off+OFFSET_Y)*ESCALA,
+      (Math.random()-0.5)*PROF
+    ));
+  }
+  const corazon = new THREE.Points(
+    new THREE.BufferGeometry().setFromPoints(ptsCorazon),
+    new THREE.PointsMaterial({ color:cCorazon, size:1.2, map:puntoTex, transparent:true,
+      alphaTest:0.01, depthWrite:false, opacity:0.95, blending:THREE.AdditiveBlending })
+  );
+  scene.add(corazon);
+
+  // --- Espiral galáctica ---
+  const ptsEspiral=[]; const brazos=4; const N_ESP=isMobile?3600:5400;
+  for(let i=0;i<N_ESP;i++){
+    const r=Math.random()*250;
+    const b=Math.floor(Math.random()*brazos);
+    const th=(b*Math.PI*2/brazos)+(r*0.02)+(Math.random()*0.4-0.2);
+    ptsEspiral.push(new THREE.Vector3(
+      Math.cos(th)*r,
+      -35-(r*0.4)+(Math.random()*8-4),
+      Math.sin(th)*r
+    ));
+  }
+  const espiral = new THREE.Points(
+    new THREE.BufferGeometry().setFromPoints(ptsEspiral),
+    new THREE.PointsMaterial({ color:cEspiral, size:1.2, map:puntoTex, transparent:true,
+      alphaTest:0.01, depthWrite:false, opacity:0.9, blending:THREE.AdditiveBlending })
+  );
+  scene.add(espiral);
+
+  // --- Polvo estelar ---
+  const R_INT=150, R_EXT=380;
+  const ptsPolvo=[]; const N_POL=isMobile?7000:14000;
+  for(let i=0;i<N_POL;i++){
+    const r=R_INT+Math.random()*(R_EXT-R_INT);
+    const th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1);
+    ptsPolvo.push(new THREE.Vector3(
+      r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th)
+    ));
+  }
+  const polvo = new THREE.Points(
+    new THREE.BufferGeometry().setFromPoints(ptsPolvo),
+    new THREE.PointsMaterial({ color:cPolvo, size:1.0, map:puntoTex, transparent:true,
+      alphaTest:0.01, depthWrite:false, opacity:0.5, blending:THREE.AdditiveBlending })
+  );
+  scene.add(polvo);
+
+  // --- Brillo central ---
+  function texGlow(size=768, c1=CONFIG.colores.glow1, c2=CONFIG.colores.glow2){
+    const c=document.createElement('canvas'); c.width=c.height=size;
+    const g=c.getContext('2d');
+    const grad=g.createRadialGradient(size/2,size/2,size*0.05,size/2,size/2,size*0.5);
+    grad.addColorStop(0,'rgba('+c1+',0.7)');
+    grad.addColorStop(0.5,'rgba('+c2+',0.2)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=grad; g.fillRect(0,0,size,size);
+    return new THREE.CanvasTexture(c);
+  }
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map:texGlow(), transparent:true, depthWrite:false, blending:THREE.AdditiveBlending }));
+  glow.scale.set(450,450,1); scene.add(glow);
+
+  // --- Anillos ---
+  function texAnillo(size=768){
+    const c=document.createElement('canvas'); c.width=c.height=size;
+    const g=c.getContext('2d'); g.translate(size/2,size/2);
+    const r1=size*0.35, r2=size*0.48;
+    const grd=g.createRadialGradient(0,0,r1*0.6,0,0,r2);
+    grd.addColorStop(0,   'rgba(255,225,240,1)');
+    grd.addColorStop(0.3, 'rgba('+CONFIG.colores.glow1+',1)');
+    grd.addColorStop(0.7, 'rgba('+CONFIG.colores.glow2+',0.8)');
+    grd.addColorStop(1,   'rgba(0,0,0,0)');
+    g.fillStyle=grd; g.beginPath(); g.arc(0,0,r2,0,Math.PI*2); g.arc(0,0,r1,0,Math.PI*2,true); g.closePath(); g.fill();
+    return new THREE.CanvasTexture(c);
+  }
+  const anillo1=new THREE.Mesh(new THREE.RingGeometry(80,115,128),
+    new THREE.MeshBasicMaterial({map:texAnillo(),transparent:true,side:THREE.DoubleSide,opacity:0.3,blending:THREE.AdditiveBlending}));
+  const anillo2=new THREE.Mesh(new THREE.RingGeometry(125,155,128),
+    new THREE.MeshBasicMaterial({map:texAnillo(),transparent:true,side:THREE.DoubleSide,opacity:0.18,blending:THREE.AdditiveBlending}));
+  anillo1.rotation.x=anillo2.rotation.x=Math.PI/2; scene.add(anillo1,anillo2);
+
+  // --- Frases orbitando ---
+  const FRASES=[]; const rep=isMobile?11:16;
+  for(let i=0;i<rep;i++) FRASES.push(...CONFIG.frases);
+
+  function texFrase(txt, color){
+    const c=document.createElement('canvas'); c.width=1024; c.height=128;
+    const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    let fs=54; ctx.font=`600 ${fs}px "Cormorant Garamond", serif`;
+    while(ctx.measureText(txt).width>c.width-50 && fs>26){ fs-=2; ctx.font=`600 ${fs}px "Cormorant Garamond", serif`; }
+    ctx.fillStyle='#ffffff'; ctx.shadowColor=color; ctx.shadowBlur=26;
+    ctx.fillText(txt, c.width/2, c.height/2);
+    return new THREE.CanvasTexture(c);
+  }
+  const PALETA_FRASES=['#ff5c8a','#ff9e6d','#ffd27d','#c74bd6','#ff7ba8','#ffc19a','#e0a7ff','#ff6d9e'];
+  const grupoFrases=new THREE.Group(); scene.add(grupoFrases);
+
+  document.fonts.ready.then(()=>{
+    for(let i=0;i<FRASES.length;i++){
+      const tex=texFrase(FRASES[i], PALETA_FRASES[i%PALETA_FRASES.length]);
+      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,alphaTest:0.01}));
+      sp.scale.set(96,12,1);
+      const ph=Math.acos(2*Math.random()-1), th=Math.random()*Math.PI*2;
+      const r=R_INT+Math.random()*(R_EXT-R_INT-30);
+      sp.position.set(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph), r*Math.sin(ph)*Math.sin(th));
+      sp.userData={ph,th,r,speed:0.001+Math.random()*0.001};
+      grupoFrases.add(sp);
+    }
+  });
+
+  // --- Fotos flotantes (opcional) ---
+  const grupoFotos=new THREE.Group(); scene.add(grupoFotos);
+  const glowFotoTex=texGlow(512,'255,158,109','199,75,214');
+  if (CONFIG.fotos.length){
+    const repFoto=isMobile?7:12; const instancias=[];
+    for(let k=0;k<repFoto;k++) instancias.push(...CONFIG.fotos);
+    instancias.forEach(url=>{
+      const ph=Math.acos(2*Math.random()-1), th=Math.random()*Math.PI*2;
+      const r=R_INT+Math.random()*(R_EXT-R_INT-30);
+      const speed=0.0007+Math.random()*0.0009;
+      const base=isMobile?20:28;
+      const gm=new THREE.SpriteMaterial({map:glowFotoTex,transparent:true,depthWrite:false,opacity:0.55,blending:THREE.AdditiveBlending});
+      const gs=new THREE.Sprite(gm); gs.scale.set(base*1.6,base*1.6,1);
+      gs.position.set(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));
+      gs.renderOrder=-1; gs.userData={ph,th,r,speed}; grupoFotos.add(gs);
+      loader.load(url,(tex)=>{
+        const iw=(tex.image&&tex.image.width)||1, ih=(tex.image&&tex.image.height)||1, ratio=iw/ih;
+        const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false,opacity:0.96}));
+        if(ratio>=1) sp.scale.set(base*ratio,base,1); else sp.scale.set(base,base/ratio,1);
+        sp.position.set(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));
+        sp.userData={ph,th,r,speed,isFoto:true}; grupoFotos.add(sp);
+      }, undefined, ()=>console.log('No se pudo cargar la foto:', url));
+    });
+  }
+
+  // --- Estrellas fugaces + chispas que suben ---
+  const fugaces=[];
+  function crearFugaz(){
+    const g=new THREE.BufferGeometry();
+    const largo=40, pts=new Float32Array(largo*3);
+    g.setAttribute('position', new THREE.BufferAttribute(pts,3));
+    const m=new THREE.PointsMaterial({color:cEstrella,size:2.4,map:puntoTex,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});
+    const line=new THREE.Points(g,m); scene.add(line);
+    const start=new THREE.Vector3((Math.random()-0.5)*600, 200+Math.random()*120, (Math.random()-0.5)*400);
+    const dir=new THREE.Vector3(-1,-0.6,(Math.random()-0.5)*0.6).normalize();
+    fugaces.push({line,g,m,start,dir,vida:0,dur:1.2+Math.random()*0.8,largo});
+  }
+  function actualizarFugaces(dt){
+    if (iniciado && Math.random()<0.006) crearFugaz();
+    for(let i=fugaces.length-1;i>=0;i--){
+      const f=fugaces[i]; f.vida+=dt;
+      const prog=f.vida/f.dur;
+      const arr=f.g.attributes.position.array;
+      for(let j=0;j<f.largo;j++){
+        const t=prog*260 - j*3;
+        arr[j*3]  =f.start.x+f.dir.x*t;
+        arr[j*3+1]=f.start.y+f.dir.y*t;
+        arr[j*3+2]=f.start.z+f.dir.z*t;
+      }
+      f.g.attributes.position.needsUpdate=true;
+      f.m.opacity=Math.sin(Math.min(prog,1)*Math.PI)*0.9;
+      if(prog>=1){ scene.remove(f.line); f.g.dispose(); f.m.dispose(); fugaces.splice(i,1); }
+    }
+  }
+
+  // ===================== Controles de cámara ==========================
+  let down=false, startX=0, startY=0, velX=0, velY=0;
+  function onDown(e){ down=true; velX=0; velY=0; const t=e.touches?e.touches[0]:e; startX=t.clientX; startY=t.clientY; }
+  function onMove(e){
+    if(!down) return; if(e.touches&&e.touches.length>1) return;
+    const t=e.touches?e.touches[0]:e; const dx=t.clientX-startX, dy=t.clientY-startY;
+    if(Math.abs(dx)>2||Math.abs(dy)>2){
+      const sx=(Math.PI*1.5)/innerWidth, sy=(Math.PI*0.8)/innerHeight;
+      velY=-dx*sx; velX=dy*sy;
+      targetRotY+=velY; targetRotX=Math.max(-1.25,Math.min(1.25,targetRotX+velX));
+      startX=t.clientX; startY=t.clientY;
+    }
+  }
+  function onUp(){ down=false; }
+  const dom=renderer.domElement;
+  dom.addEventListener('mousedown',onDown); dom.addEventListener('mousemove',onMove); window.addEventListener('mouseup',onUp);
+  dom.addEventListener('touchstart',onDown,{passive:true}); dom.addEventListener('touchmove',onMove,{passive:true});
+  window.addEventListener('touchend',(e)=>{
+    if(!e.touches||e.touches.length===0) onUp();
+    else { const t=e.touches[0]; startX=t.clientX; startY=t.clientY; }
+  },{passive:true});
+
+  // Zoom
+  addEventListener('wheel',(e)=>{ targetDist+=e.deltaY*0.25; targetDist=Math.max(180,Math.min(1100,targetDist)); },{passive:true});
+  let pinch=null;
+  function distPinch(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+  addEventListener('touchstart',(e)=>{ if(e.touches.length===2){ pinch=distPinch(e.touches); down=false; } },{passive:true});
+  addEventListener('touchmove',(e)=>{
+    if(e.touches.length===2){
+      const nd=distPinch(e.touches);
+      if(pinch!==null){ targetDist+=(pinch-nd)*0.85; targetDist=Math.max(180,Math.min(1100,targetDist)); }
+      pinch=nd;
+    } else if(pinch!==null){
+      pinch=null;
+      if(e.touches.length===1){ startX=e.touches[0].clientX; startY=e.touches[0].clientY; down=true; }
+    }
+  },{passive:true});
+  addEventListener('touchend',(e)=>{ if(e.touches.length<2) pinch=null; },{passive:true});
+
+  // ===================== Bucle de animación ===========================
+  let t=0, last=performance.now(); const DECAY=0.88;
+  function tick(now){
+    requestAnimationFrame(tick);
+    const dt=Math.min((now-last)/1000, 0.05); last=now; t+=0.01;
+
+    if(!down){ velX*=DECAY; velY*=DECAY; targetRotX=Math.max(-1.25,Math.min(1.25,targetRotX+velX)); targetRotY+=velY; }
+    rotX+=(targetRotX-rotX)*0.12; rotY+=(targetRotY-rotY)*0.12;
+
+    anillo1.rotation.z+=0.002; anillo2.rotation.z-=0.0015;
+    espiral.rotation.y-=0.0045; polvo.rotation.y+=0.0006;
+    glow.scale.set(450*(1+Math.sin(t*0.4)*0.03), 450*(1+Math.sin(t*0.4)*0.03), 1);
+
+    const s=1.0+0.05*Math.sin(t*4); corazon.scale.set(s,s,s);
+
+    grupoFrases.children.forEach(sp=>{
+      sp.material.opacity=0.8+0.2*Math.sin(t*2);
+      sp.userData.th+=sp.userData.speed;
+      sp.position.x=sp.userData.r*Math.sin(sp.userData.ph)*Math.cos(sp.userData.th);
+      sp.position.z=sp.userData.r*Math.sin(sp.userData.ph)*Math.sin(sp.userData.th);
+    });
+    grupoFotos.children.forEach(sp=>{
+      sp.userData.th+=sp.userData.speed;
+      sp.position.x=sp.userData.r*Math.sin(sp.userData.ph)*Math.cos(sp.userData.th);
+      sp.position.z=sp.userData.r*Math.sin(sp.userData.ph)*Math.sin(sp.userData.th);
+      if(sp.userData.isFoto) sp.material.opacity=0.82+0.14*Math.sin(t*1.6+sp.userData.r);
+    });
+
+    actualizarFugaces(dt);
+
+    currentDist+=(targetDist-currentDist)*0.06;
+    camera.position.set(
+      currentDist*Math.cos(rotX)*Math.sin(rotY),
+      currentDist*Math.sin(rotX),
+      currentDist*Math.cos(rotX)*Math.cos(rotY)
+    );
+    camera.lookAt(0,0,0);
+    renderer.render(scene,camera);
+  }
+  requestAnimationFrame(tick);
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+  </script>
+</body>
+</html>
